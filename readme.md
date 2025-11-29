@@ -9,8 +9,37 @@ This system analyzes incoming support tickets and suggests the top 3 most suitab
 - **Vector Embeddings** (OpenAI or HuggingFace) for semantic understanding
 - **FAISS Vector Database** for efficient similarity search
 - **Large Language Models** (GPT-3.5/GPT-4) for intelligent solution generation
-- **Flask Backend API** for processing and analysis
+- **FastAPI Backend** for high-performance API processing
 - **Node.js Frontend** with both CLI and Web UI interfaces
+
+## 🛠️ Tech Stack
+
+### Backend Technologies
+- **FastAPI** (0.109.0) - Modern, high-performance Python web framework for building APIs
+- **Uvicorn** (0.27.0) - Lightning-fast ASGI server
+- **OpenAI** (1.54.0) - GPT models for solution generation & embeddings
+- **FAISS-CPU** (1.7.4) - Facebook AI Similarity Search for vector operations
+- **Pandas** (2.1.4) - Data manipulation and analysis
+- **NumPy** (1.26.2) - Numerical computing
+- **Tiktoken** (0.5.2) - Token counting for OpenAI models
+- **Python-dotenv** (1.0.0) - Environment variable management
+
+### Frontend Technologies
+- **Node.js** - JavaScript runtime environment
+- **Express.js** (4.18.2) - Fast, minimalist web framework
+- **Axios** (1.6.2) - Promise-based HTTP client
+- **Inquirer.js** (8.2.5) - Interactive CLI prompts
+- **Chalk** (4.1.2) - Terminal string styling
+- **Ora** (5.4.1) - Elegant terminal spinners
+- **Vanilla JavaScript** - Modern ES6+ for web UI
+- **HTML5 & CSS3** - Responsive web interface
+
+### AI/ML Technologies
+- **OpenAI GPT-3.5/GPT-4** - Large language models for solution generation (optional)
+- **Sentence Transformers** - all-MiniLM-L6-v2 (384 dimensions) - Default embedding model
+- **OpenAI Embeddings** - text-embedding-3-small (1536 dimensions) - Alternative option
+- **FAISS** - Efficient similarity search and clustering of dense vectors
+- **Semantic Search** - Vector-based similarity matching
 
 ## 🏗️ Architecture
 
@@ -28,7 +57,7 @@ This system analyzes incoming support tickets and suggests the top 3 most suitab
                                │ HTTP/REST
                                ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Backend API Layer (Flask)                   │
+│                      Backend API Layer (FastAPI)                 │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │  API Endpoints: /api/analyze, /api/search, /api/stats    │  │
 │  └──────────────────────────────────────────────────────────┘  │
@@ -52,8 +81,8 @@ This system analyzes incoming support tickets and suggests the top 3 most suitab
 │  └──────────────────────────────────────────────────────────┘  │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │              Embedding Model                              │  │
-│  │  - OpenAI text-embedding-3-small (1536d)                  │  │
-│  │  - or sentence-transformers (384d)                        │  │
+│  │  - sentence-transformers/all-MiniLM-L6-v2 (384d)         │  │
+│  │  - or OpenAI text-embedding-3-small (1536d) [optional]   │  │
 │  └──────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
                                 │
@@ -73,7 +102,7 @@ This system analyzes incoming support tickets and suggests the top 3 most suitab
 ```
 Telecom Ticket Analysis/
 ├── backend/
-│   ├── app.py                 # Flask API server
+│   ├── app.py                 # FastAPI server with REST endpoints
 │   ├── config.py              # Configuration management
 │   ├── vector_store.py        # FAISS vector store & embeddings
 │   ├── ticket_agent.py        # LLM-based ticket analysis
@@ -100,63 +129,221 @@ Telecom Ticket Analysis/
 
 ### Prerequisites
 
-- **Python 3.8+**
-- **Node.js 14+**
-- **OpenAI API Key** (or Azure OpenAI credentials)
+- **Python 3.8+** - [Download Python](https://www.python.org/downloads/)
+- **Node.js 14+** - [Download Node.js](https://nodejs.org/)
+- **OpenAI API Key** - [Get API Key](https://platform.openai.com/api-keys)
+- **Git** - For cloning the repository
 
-### 1. Backend Setup
+### Quick Start
+
+#### 1. Clone the Repository
+```bash
+git clone https://github.com/AI-DEVELOPER-99/TELECOM_TICKET_ANALYSIS.git
+cd "TELECOM_TICKET_ANALYSIS"
+```
+
+#### 2. Backend Setup
 
 ```bash
 # Navigate to backend directory
 cd backend
 
-# Create and activate virtual environment (recommended)
+# Create and activate virtual environment
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies
+# Activate virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+# venv\Scripts\activate
+
+# Install Python dependencies
 pip install -r requirements.txt
 
-# Configure environment
+# Create environment configuration file
 cp .env.example .env
 
 # Edit .env and add your OpenAI API key
-# OPENAI_API_KEY=your_api_key_here
+# OPENAI_API_KEY=sk-your_api_key_here
+# You can use nano, vim, or any text editor:
+nano .env
 
-# Build vector store (first time only - takes a few minutes)
+# Build the vector store (first time only - takes 2-5 minutes)
 python vector_store.py
 
-# Start the backend server
+# Start the FastAPI backend server
 python app.py
 ```
 
-The backend will start on `http://localhost:5000`
+**Expected Output:**
+```
+Initializing Ticket Analysis System...
+✓ Configuration validated
+✓ Vector store loaded successfully
+✓ Ticket agent initialized
+INFO:     Uvicorn running on http://127.0.0.1:5000
+```
 
-### 2. Frontend Setup
+The backend API will be available at `http://localhost:5000`
 
-#### Web UI
+#### 3. Frontend Setup
+
+Open a **new terminal window** and run:
 
 ```bash
-# Navigate to frontend directory (in a new terminal)
+# Navigate to frontend directory
 cd frontend
 
-# Install dependencies
+# Install Node.js dependencies
 npm install
 
-# Configure environment
+# Create environment configuration file
 cp .env.example .env
 
-# Start the web server
+# (Optional) Edit .env if backend is on different host/port
+# BACKEND_URL=http://localhost:5000
+# PORT=3000
+
+# Start the Express web server
 npm start
+```
+
+**Expected Output:**
+```
+════════════════════════════════════════════════════════════
+  TELECOM TICKET ANALYSIS ASSISTANT - WEB UI
+════════════════════════════════════════════════════════════
+
+  🌐 Server running at: http://localhost:3000
+  🔗 Backend URL: http://localhost:5000
+
+  Press Ctrl+C to stop the server
 ```
 
 The web UI will be available at `http://localhost:3000`
 
-#### CLI Interface
+### Alternative: Run CLI Interface
+
+Instead of the web UI, you can use the interactive CLI:
 
 ```bash
 # In the frontend directory
 npm run cli
+```
+
+**Expected Output:**
+```
+╔═══════════════════════════════════════════════════════╗
+║   TELECOM TICKET ANALYSIS ASSISTANT - CLI MODE       ║
+╚═══════════════════════════════════════════════════════╝
+
+? What would you like to do? (Use arrow keys)
+❯ Analyze New Ticket
+  Search Similar Tickets
+  View System Stats
+  Exit
+```
+
+### Verification
+
+To verify everything is working correctly:
+
+1. **Check Backend Health:**
+   ```bash
+   curl http://localhost:5000/health
+   ```
+   Expected response: `{"status":"healthy","service":"Ticket Analysis API","initialized":true}`
+
+2. **Check Frontend:**
+   Open browser to `http://localhost:3000` and you should see the web interface
+
+3. **Test Analysis:**
+   - Go to "Analyze Ticket" tab
+   - Enter a test ticket
+   - Click "Analyze Ticket"
+   - You should receive 3 solution recommendations
+
+### Troubleshooting Setup
+
+#### Backend Issues
+
+**Error: `ModuleNotFoundError: No module named 'fastapi'`**
+```bash
+# Ensure virtual environment is activated
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+```
+
+**Error: `OpenAI API key not found`**
+```bash
+# Check .env file exists and has correct format
+cat backend/.env
+# Should contain: OPENAI_API_KEY=sk-...
+```
+
+**Error: `File not found: clean_data.csv`**
+```bash
+# Ensure you're in the backend directory and data file exists
+ls ../data/clean_data.csv
+```
+
+**Error: Port 5000 already in use**
+```bash
+# Change port in backend/.env
+echo "FLASK_PORT=5001" >> .env
+# Or kill the process using port 5000
+lsof -ti:5000 | xargs kill
+```
+
+#### Frontend Issues
+
+**Error: `Cannot connect to backend`**
+- Ensure backend is running on port 5000
+- Check `BACKEND_URL` in `frontend/.env`
+- Verify firewall isn't blocking localhost connections
+
+**Error: `npm: command not found`**
+```bash
+# Install Node.js from https://nodejs.org/
+node --version  # Should show v14 or higher
+npm --version
+```
+
+**Error: Port 3000 already in use**
+```bash
+# Change port in frontend/.env
+echo "PORT=3001" >> .env
+```
+
+### Environment Variables Reference
+
+#### Backend `.env` Configuration
+```env
+# Optional - Only required if using OpenAI models
+OPENAI_API_KEY=sk-your_actual_api_key_here
+
+# Optional - Model Configuration
+EMBEDDING_MODEL=sentence-transformers
+EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
+LLM_MODE=local
+LLM_MODEL=gpt-3.5-turbo
+TEMPERATURE=0.7
+MAX_TOKENS=1000
+
+# Optional - Search Configuration
+TOP_K_RESULTS=5
+
+# Optional - Server Configuration
+FLASK_PORT=5000
+```
+
+#### Frontend `.env` Configuration
+```env
+# Backend API endpoint
+BACKEND_URL=http://localhost:5000
+
+# Frontend server port
+PORT=3000
 ```
 
 ## 💻 Usage
@@ -256,9 +443,9 @@ Get system statistics
   "success": true,
   "stats": {
     "total_tickets": 16339,
-    "embedding_dimension": 1536,
-    "embedding_model": "text-embedding-3-small",
-    "llm_model": "gpt-3.5-turbo"
+    "embedding_dimension": 384,
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "llm_mode": "local"
   }
 }
 ```
@@ -267,22 +454,24 @@ Get system statistics
 
 ### Backend Configuration (`backend/.env`)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key | Required |
-| `EMBEDDING_MODEL` | Embedding model to use | `text-embedding-3-small` |
-| `LLM_MODEL` | LLM for solution generation | `gpt-3.5-turbo` |
-| `TEMPERATURE` | LLM temperature (0-1) | `0.7` |
-| `MAX_TOKENS` | Max tokens in LLM response | `1000` |
-| `TOP_K_RESULTS` | Number of similar tickets to retrieve | `5` |
-| `FLASK_PORT` | Backend server port | `5000` |
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `OPENAI_API_KEY` | OpenAI API key from platform.openai.com | - | Only if using OpenAI |
+| `EMBEDDING_MODEL` | Embedding provider (`sentence-transformers` or `openai`) | `sentence-transformers` | No |
+| `EMBEDDING_MODEL_NAME` | Specific model name | `all-MiniLM-L6-v2` | No |
+| `LLM_MODE` | LLM mode (`local` or `openai`) | `local` | No |
+| `LLM_MODEL` | LLM for solution generation (if using OpenAI) | `gpt-3.5-turbo` | No |
+| `TEMPERATURE` | LLM temperature (0-1) | `0.7` | No |
+| `MAX_TOKENS` | Max tokens in LLM response | `1000` | No |
+| `TOP_K_RESULTS` | Number of similar tickets to retrieve | `5` | No |
+| `FLASK_PORT` | Backend server port | `5000` | No |
 
 ### Frontend Configuration (`frontend/.env`)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `BACKEND_URL` | Backend API URL | `http://localhost:5000` |
-| `PORT` | Frontend server port | `3000` |
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `BACKEND_URL` | Backend API URL | `http://localhost:5000` | No |
+| `PORT` | Frontend server port | `3000` | No |
 
 ## 🎯 How It Works
 
@@ -292,9 +481,10 @@ Get system statistics
 - Creates structured text representations optimized for embedding
 
 ### 2. Embedding Generation
-- Converts ticket text into dense vector embeddings (1536 dimensions for OpenAI)
+- Converts ticket text into dense vector embeddings (384 dimensions for sentence-transformers, 1536 for OpenAI)
 - Uses state-of-the-art embedding models for semantic understanding
 - Processes tickets in batches for efficiency
+- Default: sentence-transformers/all-MiniLM-L6-v2 (local, free)
 
 ### 3. Vector Store Creation
 - Stores embeddings in FAISS (Facebook AI Similarity Search) index
@@ -396,18 +586,29 @@ all charges on your account...
 Edit `backend/.env`:
 
 ```env
-# Option 1: OpenAI (recommended for best quality)
-EMBEDDING_MODEL=text-embedding-3-small
+# Option 1: Sentence Transformers (default, free, runs locally)
+EMBEDDING_MODEL=sentence-transformers
+EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
 
-# Option 2: HuggingFace sentence-transformers (free, runs locally)
-# EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+# Option 2: OpenAI (better quality, requires API key and costs money)
+# EMBEDDING_MODEL=openai
+# OPENAI_API_KEY=sk-your_api_key_here
+
+# Other sentence-transformers models you can try:
+# EMBEDDING_MODEL_NAME=all-mpnet-base-v2  # Higher quality, slower
+# EMBEDDING_MODEL_NAME=paraphrase-MiniLM-L6-v2  # Similar performance
 ```
-
-For HuggingFace models, modify `vector_store.py` to set `use_openai=False`.
 
 ### Using Different LLMs
 
 ```env
+# Local mode (default, no API calls)
+LLM_MODE=local
+
+# OpenAI mode (requires API key)
+LLM_MODE=openai
+OPENAI_API_KEY=sk-your_api_key_here
+
 # GPT-3.5 (faster, cheaper)
 LLM_MODEL=gpt-3.5-turbo
 
@@ -432,32 +633,84 @@ Update `vector_store.py` and `ticket_agent.py` to use Azure OpenAI client.
 
 ## 🚧 Troubleshooting
 
-### Backend won't start
+### Backend Issues
+
+**Problem: Backend won't start**
 - Verify Python version: `python --version` (3.8+ required)
 - Check API key is set in `backend/.env`
-- Ensure all dependencies are installed: `pip install -r requirements.txt`
+- Ensure virtual environment is activated: `source venv/bin/activate`
+- Install all dependencies: `pip install -r requirements.txt`
 
-### Vector store build fails
+**Problem: Vector store build fails**
 - Ensure `data/clean_data.csv` exists
 - Check available disk space (needs ~500MB)
-- Verify OpenAI API key has sufficient quota
+- If using OpenAI: Verify API key has sufficient quota and billing status
+- If using sentence-transformers: Ensure model can download (needs internet connection first time)
+- For sentence-transformers errors: `pip install sentence-transformers`
 
-### Frontend can't connect to backend
-- Ensure backend is running on port 5000
-- Check `BACKEND_URL` in `frontend/.env`
+**Problem: Import errors**
+```bash
+# Reinstall dependencies in virtual environment
+pip uninstall -y -r requirements.txt
+pip install -r requirements.txt
+```
+
+**Problem: FAISS installation fails on Apple Silicon (M1/M2)**
+```bash
+# Use conda instead
+conda install -c conda-forge faiss-cpu
+```
+
+### Frontend Issues
+
+**Problem: Frontend can't connect to backend**
+- Ensure backend is running on port 5000: `curl http://localhost:5000/health`
+- Check `BACKEND_URL` in `frontend/.env` matches backend address
 - Verify no firewall blocking localhost connections
+- Check CORS is enabled in backend (it is by default)
 
-### Slow response times
-- First query is slower (cold start)
-- Consider upgrading to faster embedding model
-- Use GPT-3.5 instead of GPT-4 for speed
+**Problem: `npm install` fails**
+- Update Node.js to version 14+: `node --version`
+- Clear npm cache: `npm cache clean --force`
+- Delete `node_modules` and try again: `rm -rf node_modules && npm install`
+
+**Problem: Port already in use**
+```bash
+# Find and kill process using the port
+# For port 3000 (frontend):
+lsof -ti:3000 | xargs kill
+
+# For port 5000 (backend):
+lsof -ti:5000 | xargs kill
+```
+
+### Performance Issues
+
+**Problem: Slow response times**
+- First query is slower (cold start) - this is normal
+- Consider using `gpt-3.5-turbo` instead of `gpt-4` for faster responses
+- Reduce `TOP_K_RESULTS` in `.env` to retrieve fewer similar tickets
+- Ensure adequate RAM (minimum 4GB free)
+
+**Problem: High memory usage**
+- Vector store requires ~500MB in memory
+- Close other applications if running low on RAM
+- Consider using smaller embedding model for lower memory footprint
+
+**Problem: API rate limits**
+- Check OpenAI usage dashboard for quota limits
+- Reduce `MAX_TOKENS` to use fewer tokens per request
+- Add delays between requests in high-volume scenarios
+- Consider upgrading OpenAI plan for higher limits
 
 ## 📈 Performance
 
-- **Embedding Generation**: ~2-5 minutes for 16K tickets (first time only)
-- **Query Response Time**: 2-5 seconds per ticket analysis
+- **Embedding Generation**: 
+  - Sentence-transformers: ~5-10 minutes for 16K tickets (first time only, runs locally)
+  - OpenAI: ~2-3 minutes (requires API calls and costs ~$0.50)
+- **Query Response Time**: 1-3 seconds per ticket analysis (local mode)
 - **Vector Search**: Sub-millisecond similarity search
-- **Memory Usage**: ~500MB for vector store in memory
+- **Memory Usage**: ~500MB for vector store + ~400MB for embedding model in memory
 
 ## 🔐 Security Considerations
 
