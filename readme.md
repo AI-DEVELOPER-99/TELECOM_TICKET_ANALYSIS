@@ -17,12 +17,13 @@ This system analyzes incoming support tickets and suggests the top 3 most suitab
 ### Backend Technologies
 - **FastAPI** (0.109.0) - Modern, high-performance Python web framework for building APIs
 - **Uvicorn** (0.27.0) - Lightning-fast ASGI server
-- **OpenAI** (1.54.0) - GPT models for solution generation & embeddings
+- **OpenAI** (2.8.1) - GPT models for solution generation & embeddings
 - **FAISS-CPU** (1.7.4) - Facebook AI Similarity Search for vector operations
 - **Pandas** (2.1.4) - Data manipulation and analysis
 - **NumPy** (1.26.2) - Numerical computing
 - **Tiktoken** (0.5.2) - Token counting for OpenAI models
 - **Python-dotenv** (1.0.0) - Environment variable management
+- **Sentence Transformers** (5.1.0+) - Local embedding models
 
 ### Frontend Technologies
 - **Node.js** - JavaScript runtime environment
@@ -35,7 +36,8 @@ This system analyzes incoming support tickets and suggests the top 3 most suitab
 - **HTML5 & CSS3** - Responsive web interface
 
 ### AI/ML Technologies
-- **OpenAI GPT-3.5/GPT-4** - Large language models for solution generation (optional)
+- **OpenAI GPT-4o-mini** - Lightweight, cost-effective language model for solution generation
+- **OpenAI GPT-3.5/GPT-4** - Alternative large language models (optional)
 - **Sentence Transformers** - all-MiniLM-L6-v2 (384 dimensions) - Default embedding model
 - **OpenAI Embeddings** - text-embedding-3-small (1536 dimensions) - Alternative option
 - **FAISS** - Efficient similarity search and clustering of dense vectors
@@ -108,9 +110,11 @@ Telecom Ticket Analysis/
 │   ├── ticket_agent.py        # LLM-based ticket analysis
 │   ├── requirements.txt       # Python dependencies
 │   ├── .env.example          # Environment variables template
+│   ├── .env                  # Environment configuration (not in git)
+│   ├── venv/                 # Python virtual environment
 │   └── vector_store/         # (Generated) FAISS index files
 ├── frontend/
-│   ├── server.js             # Express web server
+│   ├── server.js             # Express web server with proxy
 │   ├── cli.js                # Interactive CLI application
 │   ├── package.json          # Node.js dependencies
 │   ├── .env.example         # Frontend environment template
@@ -122,6 +126,7 @@ Telecom Ticket Analysis/
 │   └── clean_data.csv       # Cleaned ticket dataset
 ├── scripts/
 │   └── cleanData.py         # Data cleaning script
+├── GENERATE_SOLUTION_FEATURE.md  # Generate Solution feature docs
 └── readme.md                # This file
 ```
 
@@ -181,10 +186,11 @@ Initializing Ticket Analysis System...
 ✓ Configuration validated
 ✓ Vector store loaded successfully
 ✓ Ticket agent initialized
-INFO:     Uvicorn running on http://127.0.0.1:5000
+Using OpenAI for solution generation
+INFO:     Uvicorn running on http://0.0.0.0:5001
 ```
 
-The backend API will be available at `http://localhost:5000`
+The backend API will be available at `http://localhost:5001`
 
 #### 3. Frontend Setup
 
@@ -215,7 +221,7 @@ npm start
 ════════════════════════════════════════════════════════════
 
   🌐 Server running at: http://localhost:3000
-  🔗 Backend URL: http://localhost:5000
+  🔗 Backend URL: http://localhost:5001
 
   Press Ctrl+C to stop the server
 ```
@@ -250,7 +256,7 @@ To verify everything is working correctly:
 
 1. **Check Backend Health:**
    ```bash
-   curl http://localhost:5000/health
+   curl http://localhost:5001/health
    ```
    Expected response: `{"status":"healthy","service":"Ticket Analysis API","initialized":true}`
 
@@ -262,6 +268,12 @@ To verify everything is working correctly:
    - Enter a test ticket
    - Click "Analyze Ticket"
    - You should receive 3 solution recommendations
+
+4. **Test Generate Solution (NEW):**
+   - Go to "✨ Generate Solution" tab
+   - Enter ticket details
+   - Click "Generate Solution"
+   - You should receive an AI-generated comprehensive solution
 
 ### Troubleshooting Setup
 
@@ -290,16 +302,16 @@ ls ../data/clean_data.csv
 **Error: Port 5000 already in use**
 ```bash
 # Change port in backend/.env
-echo "FLASK_PORT=5001" >> .env
-# Or kill the process using port 5000
-lsof -ti:5000 | xargs kill
+echo "SERVER_PORT=5001" >> .env
+# Or kill the process using port 5001
+lsof -ti:5001 | xargs kill -9
 ```
 
 #### Frontend Issues
 
 **Error: `Cannot connect to backend`**
-- Ensure backend is running on port 5000
-- Check `BACKEND_URL` in `frontend/.env`
+- Ensure backend is running on port 5001
+- Check `BACKEND_URL` in `frontend/.env` (should be `http://localhost:5001`)
 - Verify firewall isn't blocking localhost connections
 
 **Error: `npm: command not found`**
@@ -334,13 +346,15 @@ MAX_TOKENS=1000
 TOP_K_RESULTS=5
 
 # Optional - Server Configuration
-FLASK_PORT=5000
+SERVER_PORT=5001
+SERVER_HOST=0.0.0.0
+SERVER_DEBUG=True
 ```
 
 #### Frontend `.env` Configuration
 ```env
 # Backend API endpoint
-BACKEND_URL=http://localhost:5000
+BACKEND_URL=http://localhost:5001
 
 # Frontend server port
 PORT=3000
@@ -358,6 +372,7 @@ PORT=3000
 
 **Features:**
 - 📝 Analyze new tickets with AI-powered solutions
+- ✨ Generate comprehensive solutions using LLM and retrieved context
 - 🔍 Search for similar resolved tickets
 - 📊 View system statistics
 - 🎨 Modern, responsive interface
@@ -403,6 +418,36 @@ Analyze a ticket and get top 3 solutions
     }
   ],
   "similar_tickets_count": 5
+}
+```
+
+#### POST `/api/generate-solution` (NEW)
+Generate a comprehensive solution using LLM and retrieved ticket chunks
+
+**Request:**
+```json
+{
+  "ticket_description": "Subject: Email Server Issues\n\nDescription: Email server not responding..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "query": "Subject: Email Server Issues...",
+  "generated_solution": "Based on similar resolved tickets, here's a comprehensive solution:\n\n1. Check server status...",
+  "retrieved_chunks": [
+    {
+      "id": 456,
+      "subject": "Email Server Down",
+      "similarity_score": 0.87,
+      "answer": "Restart email services...",
+      ...
+    }
+  ],
+  "chunks_count": 5,
+  "llm_model": "gpt-4o-mini"
 }
 ```
 
@@ -459,18 +504,20 @@ Get system statistics
 | `OPENAI_API_KEY` | OpenAI API key from platform.openai.com | - | Only if using OpenAI |
 | `EMBEDDING_MODEL` | Embedding provider (`sentence-transformers` or `openai`) | `sentence-transformers` | No |
 | `EMBEDDING_MODEL_NAME` | Specific model name | `all-MiniLM-L6-v2` | No |
-| `LLM_MODE` | LLM mode (`local` or `openai`) | `local` | No |
-| `LLM_MODEL` | LLM for solution generation (if using OpenAI) | `gpt-3.5-turbo` | No |
+| `LLM_MODE` | LLM mode (`local` or `openai`) | `openai` | No |
+| `LLM_MODEL` | LLM for solution generation | `gpt-4o-mini` | No |
 | `TEMPERATURE` | LLM temperature (0-1) | `0.7` | No |
 | `MAX_TOKENS` | Max tokens in LLM response | `1000` | No |
 | `TOP_K_RESULTS` | Number of similar tickets to retrieve | `5` | No |
-| `FLASK_PORT` | Backend server port | `5000` | No |
+| `SERVER_PORT` | Backend server port | `5001` | No |
+| `SERVER_HOST` | Server host address | `0.0.0.0` | No |
+| `SERVER_DEBUG` | Enable debug mode | `True` | No |
 
 ### Frontend Configuration (`frontend/.env`)
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `BACKEND_URL` | Backend API URL | `http://localhost:5000` | No |
+| `BACKEND_URL` | Backend API URL | `http://localhost:5001` | No |
 | `PORT` | Frontend server port | `3000` | No |
 
 ## 🎯 How It Works
@@ -602,17 +649,20 @@ EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
 ### Using Different LLMs
 
 ```env
-# Local mode (default, no API calls)
+# Local mode (default, rule-based generation)
 LLM_MODE=local
 
-# OpenAI mode (requires API key)
+# OpenAI mode (requires API key, uses GPT models)
 LLM_MODE=openai
 OPENAI_API_KEY=sk-your_api_key_here
 
-# GPT-3.5 (faster, cheaper)
+# GPT-4o-mini (recommended: lightweight, fast, cost-effective)
+LLM_MODEL=gpt-4o-mini
+
+# GPT-3.5 (faster, cheaper, good quality)
 LLM_MODEL=gpt-3.5-turbo
 
-# GPT-4 (better quality, more expensive)
+# GPT-4 (best quality, more expensive)
 LLM_MODEL=gpt-4
 
 # GPT-4 Turbo
@@ -664,10 +714,11 @@ conda install -c conda-forge faiss-cpu
 ### Frontend Issues
 
 **Problem: Frontend can't connect to backend**
-- Ensure backend is running on port 5000: `curl http://localhost:5000/health`
-- Check `BACKEND_URL` in `frontend/.env` matches backend address
+- Ensure backend is running on port 5001: `curl http://localhost:5001/health`
+- Check `BACKEND_URL` in `frontend/.env` matches backend address (should be `http://localhost:5001`)
 - Verify no firewall blocking localhost connections
 - Check CORS is enabled in backend (it is by default)
+- Ensure frontend proxy routes include `/api/generate-solution`
 
 **Problem: `npm install` fails**
 - Update Node.js to version 14+: `node --version`
@@ -678,26 +729,34 @@ conda install -c conda-forge faiss-cpu
 ```bash
 # Find and kill process using the port
 # For port 3000 (frontend):
-lsof -ti:3000 | xargs kill
+lsof -ti:3000 | xargs kill -9
 
-# For port 5000 (backend):
-lsof -ti:5000 | xargs kill
+# For port 5001 (backend):
+lsof -ti:5001 | xargs kill -9
 ```
 
 ### Performance Issues
 
 **Problem: Slow response times**
 - First query is slower (cold start) - this is normal
-- Consider using `gpt-3.5-turbo` instead of `gpt-4` for faster responses
+- Consider using `gpt-4o-mini` (recommended) or `gpt-3.5-turbo` for faster responses
 - Reduce `TOP_K_RESULTS` in `.env` to retrieve fewer similar tickets
 - Ensure adequate RAM (minimum 4GB free)
 
 **Problem: High memory usage**
 - Vector store requires ~500MB in memory
+- Sentence-transformers model requires ~400MB
 - Close other applications if running low on RAM
 - Consider using smaller embedding model for lower memory footprint
 
-**Problem: API rate limits**
+**Problem: OpenAI errors (`proxies` argument error)**
+```bash
+# Upgrade to compatible OpenAI version
+cd backend
+source venv/bin/activate
+pip install --upgrade openai
+# Should install openai>=2.8.1
+```
 - Check OpenAI usage dashboard for quota limits
 - Reduce `MAX_TOKENS` to use fewer tokens per request
 - Add delays between requests in high-volume scenarios
@@ -728,6 +787,22 @@ To extend this project:
 2. **Improve preprocessing**: Enhance `preprocess_ticket()` for better context
 3. **Custom ranking**: Modify LLM prompts in `ticket_agent.py`
 4. **Additional features**: Add feedback loops, solution tracking, etc.
+5. **New endpoints**: Add to both `backend/app.py` and `frontend/server.js` proxy
+
+## 🆕 Recent Updates
+
+### Generate Solution Feature
+- Added new `/api/generate-solution` endpoint
+- Uses LLM to generate comprehensive solutions from retrieved ticket chunks
+- New "✨ Generate Solution" tab in web UI
+- Displays retrieved context tickets with similarity scores
+- See `GENERATE_SOLUTION_FEATURE.md` for detailed documentation
+
+### Technical Improvements
+- Upgraded OpenAI library to v2.8.1 for better compatibility
+- Fixed proxy server routing for all API endpoints
+- Enhanced error handling in frontend
+- Improved null safety in response processing
 
 ## 📝 License
 
