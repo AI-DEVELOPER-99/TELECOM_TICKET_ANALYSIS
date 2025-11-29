@@ -36,6 +36,18 @@ app.post('/api/search', async (req, res) => {
     }
 });
 
+app.post('/api/generate-solution', async (req, res) => {
+    try {
+        const response = await axios.post(`${BACKEND_URL}/api/generate-solution`, req.body);
+        res.json(response.data);
+    } catch (error) {
+        res.status(error.response?.status || 500).json({
+            success: false,
+            error: error.response?.data?.detail || error.response?.data?.error || error.message
+        });
+    }
+});
+
 app.get('/api/stats', async (req, res) => {
     try {
         const response = await axios.get(`${BACKEND_URL}/api/stats`);

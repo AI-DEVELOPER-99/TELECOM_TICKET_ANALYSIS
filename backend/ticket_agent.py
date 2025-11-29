@@ -65,6 +65,118 @@ class TicketAnalysisAgent:
             'similar_tickets_count': len(similar_tickets)
         }
     
+    def generate_solution_from_chunks(self, ticket_description: str, retrieved_chunks: List[Dict]) -> str:
+        """
+        Generate a comprehensive solution using LLM and retrieved ticket chunks
+        
+        This method takes retrieved similar tickets and uses the LLM to generate
+        a single comprehensive solution tailored to the specific issue.
+        
+        Args:
+            ticket_description: The new ticket description
+            retrieved_chunks: List of similar tickets retrieved from vector store
+            
+        Returns:
+            String containing the generated solution
+        """
+        # Prepare context from retrieved chunks
+        context = self._prepare_context(retrieved_chunks)
+        
+        if self.use_openai:
+            return self._generate_llm_solution(ticket_description, context, retrieved_chunks)
+        else:
+            return self._generate_local_solution(ticket_description, retrieved_chunks)
+    
+    def _generate_llm_solution(self, ticket_description: str, context: str, chunks: List[Dict]) -> str:
+        """
+        Use OpenAI LLM to generate a comprehensive solution
+        
+        Args:
+            ticket_description: The new ticket description
+            context: Formatted context from similar tickets
+            chunks: List of retrieved ticket chunks
+            
+        Returns:
+            Generated solution text
+        """
+        system_prompt = """You are an expert technical support AI assistant for a telecom service provider.
+Your task is to analyze a new support ticket and provide a comprehensive, actionable solution.
+
+Based on similar resolved tickets provided as context, you should:
+1. Understand the core issue and its technical context
+2. Synthesize information from multiple similar cases
+3. Provide step-by-step troubleshooting or resolution steps
+4. Include relevant technical details and configurations
+5. Mention any caveats or prerequisites
+6. Keep the solution clear, professional, and actionable
+
+Focus on practical guidance that support agents can immediately apply."""
+
+        user_prompt = f"""New Support Ticket:
+{ticket_description}
+
+Similar Resolved Tickets for Context:
+{context}
+
+Based on the context from these similar resolved tickets, provide a comprehensive solution for the new ticket.
+Include specific troubleshooting steps, technical details, and actionable guidance."""
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.config.LLM_MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=self.config.TEMPERATURE,
+                max_tokens=self.config.MAX_TOKENS
+            )
+            
+            solution = response.choices[0].message.content.strip()
+            return solution
+            
+        except Exception as e:
+            print(f"Error calling LLM: {e}")
+            # Fallback to local solution
+            return self._generate_local_solution(ticket_description, chunks)
+    
+    def _generate_local_solution(self, ticket_description: str, chunks: List[Dict]) -> str:
+        """
+        Generate a rule-based solution without LLM
+        
+        Args:
+            ticket_description: The new ticket description
+            chunks: List of retrieved ticket chunks
+            
+        Returns:
+            Generated solution text
+        """
+        if not chunks:
+            return "No similar tickets found. Please provide more details or contact technical support."
+        
+        # Use the most similar ticket's solution as base
+        most_similar = chunks[0]
+        solution_parts = []
+        
+        # solution_parts.append("RECOMMENDED SOLUTION")
+        # solution_parts.append("=" * 60)
+        solution_parts.append(most_similar['answer'])
+        # solution_parts.append(f"\nBased on a similar {most_similar['type']} ticket with {most_similar['similarity_score']:.1%} similarity:\n")
+        
+        # Add additional context from other similar tickets
+        # if len(chunks) > 1:
+        #     solution_parts.append("\n\nADDITIONAL CONTEXT FROM SIMILAR TICKETS")
+        #     solution_parts.append("-" * 60)
+            
+        #     for i, chunk in enumerate(chunks[1:3], 2):
+        #         solution_parts.append(f"\nSimilar Ticket {i} ({chunk['similarity_score']:.1%} match):")
+        #         solution_parts.append(f"Resolution: {chunk['answer'][:300]}...")
+        
+        # solution_parts.append("\n\nNOTE: This solution is based on similar resolved tickets. ")
+        # solution_parts.append("Please adapt the steps to your specific situation.")
+        
+        return "\n".join(solution_parts)
+    
     def _prepare_context(self, similar_tickets: List[Dict]) -> str:
         """
         Prepare context string from similar tickets for LLM

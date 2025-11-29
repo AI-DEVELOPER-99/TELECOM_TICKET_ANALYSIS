@@ -409,6 +409,41 @@ small {
     margin-right: 5px;
 }
 
+/* Generated Solution Styles */
+.generated-solution {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-left: 4px solid var(--primary-color);
+}
+
+.generated-text {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.retrieved-chunk {
+    background: #f8fafc;
+    border-left: 3px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.retrieved-chunk h4 {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    margin-bottom: 10px;
+}
+
+.retrieved-chunk .ticket-details {
+    margin-top: 10px;
+}
+
+.collapsed .ticket-body,
+.collapsed .ticket-answer {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
 /* Stats */
 .stats-grid {
     display: grid;

@@ -163,6 +163,63 @@ async def search_similar(request: SearchRequest):
         print(f"Error in search_similar: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/generate-solution")
+async def generate_solution(request: TicketAnalysisRequest):
+    """
+    Generate a solution using LLM and retrieved similar ticket chunks
+    
+    This endpoint retrieves similar tickets from the vector store and uses
+    the LLM to generate a comprehensive solution based on the retrieved context.
+    
+    **Request Body:**
+    - ticket_description: Description of the issue (min 10 characters)
+    
+    **Response:**
+    - success: Boolean indicating success
+    - query: The original query
+    - generated_solution: The LLM-generated solution text
+    - retrieved_chunks: List of similar tickets used as context
+    - chunks_count: Number of retrieved chunks
+    - llm_model: The LLM model used for generation
+    """
+    try:
+        # Check if system is initialized
+        if agent is None or vector_store is None:
+            raise HTTPException(
+                status_code=500,
+                detail="System not initialized. Please check configuration."
+            )
+        
+        # Step 1: Retrieve similar tickets (chunks) from vector store
+        print("Retrieving similar tickets...")
+        similar_tickets = vector_store.search_similar_tickets(
+            request.ticket_description,
+            top_k=Config.TOP_K_RESULTS
+        )
+        
+        # Step 2: Use LLM to generate solution based on retrieved chunks
+        print("Generating solution with LLM...")
+        generated_solution = agent.generate_solution_from_chunks(
+            request.ticket_description,
+            similar_tickets
+        )
+        
+        # Step 3: Return the generated solution with retrieved chunks
+        return {
+            "success": True,
+            "query": request.ticket_description,
+            "generated_solution": generated_solution,
+            "retrieved_chunks": similar_tickets,
+            "chunks_count": len(similar_tickets),
+            "llm_model": Config.LLM_MODEL if agent.use_openai else "local-rule-based"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in generate_solution: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/rebuild-index")
 async def rebuild_index():
     """
@@ -232,6 +289,7 @@ if __name__ == '__main__':
     print(f"Starting server on {Config.SERVER_HOST}:{Config.SERVER_PORT}...")
     print(f"API Documentation:")
     print(f"  POST /api/analyze - Analyze ticket and get solutions")
+    print(f"  POST /api/generate-solution - Generate solution using LLM and retrieved chunks")
     print(f"  POST /api/search - Search for similar tickets")
     print(f"  GET /api/stats - Get system statistics")
     print(f"  GET /health - Health check")

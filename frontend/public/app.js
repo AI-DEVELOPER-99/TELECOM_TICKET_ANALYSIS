@@ -132,6 +132,120 @@ function displayAnalysisResults(data) {
     resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+// Generate solution form handler
+const generateForm = document.getElementById('generate-form');
+if (generateForm) {
+    generateForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const subject = document.getElementById('generate-subject').value;
+        const description = document.getElementById('generate-description').value;
+        const ticketDescription = `Subject: ${subject}\n\nDescription: ${description}`;
+
+        const btn = e.target.querySelector('.btn');
+        const btnText = btn.querySelector('.btn-text');
+        const spinner = btn.querySelector('.spinner');
+
+        // Show loading state
+        btn.disabled = true;
+        btnText.textContent = 'Generating...';
+        spinner.style.display = 'inline-block';
+
+        // Hide previous results
+        document.getElementById('generate-results').style.display = 'none';
+
+        try {
+            const response = await fetch('/api/generate-solution', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ticket_description: ticketDescription })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                showError('generate-results', errorData.detail || errorData.error || `Server error: ${response.status}`);
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                displayGenerateSolutionResults(data);
+            } else {
+                showError('generate-results', data.error || 'Solution generation failed');
+            }
+        } catch (error) {
+            console.error('Generate solution error:', error);
+            showError('generate-results', `Error: ${error.message || 'Network error. Please check if backend is running.'}`);
+        } finally {
+            // Reset button
+            btn.disabled = false;
+            btnText.textContent = 'Generate Solution';
+            spinner.style.display = 'none';
+        }
+    });
+}
+
+// Display generated solution results
+function displayGenerateSolutionResults(data) {
+    const resultsContainer = document.getElementById('generate-results');
+    resultsContainer.style.display = 'block';
+
+    let html = `
+        <div class="card">
+            <h2>Generated Solution</h2>
+            <p class="description">Based on ${data.chunks_count || 0} similar resolved tickets using ${data.llm_model || 'AI'}</p>
+        </div>
+
+        <div class="solution-card generated-solution">
+            <div class="solution-header">
+                <div class="solution-rank">✨ AI-Generated Solution</div>
+            </div>
+            <div class="solution-text generated-text">
+                ${escapeHtml(data.generated_solution || 'No solution generated').replace(/\n/g, '<br>')}
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Retrieved Context (Similar Tickets)</h3>
+            <p class="description">The following similar tickets were used to generate the solution</p>
+        </div>
+    `;
+
+    // Display retrieved chunks
+    if (data.retrieved_chunks && data.retrieved_chunks.length > 0) {
+        data.retrieved_chunks.forEach((chunk, index) => {
+            const similarity = Math.round((chunk.similarity_score || 0) * 100);
+            
+            html += `
+                <div class="search-result retrieved-chunk">
+                    <h4>${index + 1}. ${escapeHtml(chunk.subject || 'No subject')}</h4>
+                    <div class="search-result-meta">
+                        <span class="badge badge-similarity">Similarity: ${similarity}%</span>
+                        <span class="badge badge-type">${escapeHtml(chunk.type || 'Unknown')}</span>
+                        <span class="badge badge-priority">${escapeHtml(chunk.priority || 'Unknown')}</span>
+                    </div>
+                    <div class="ticket-details">
+                        <div class="detail-section collapsed">
+                            <strong>Description:</strong>
+                            <p class="ticket-body">${escapeHtml((chunk.body || '').substring(0, 200))}${chunk.body && chunk.body.length > 200 ? '...' : ''}</p>
+                        </div>
+                        <div class="detail-section collapsed">
+                            <strong>Resolution:</strong>
+                            <p class="ticket-answer">${escapeHtml((chunk.answer || '').substring(0, 200))}${chunk.answer && chunk.answer.length > 200 ? '...' : ''}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        html += `<div class="card"><p>No similar tickets found.</p></div>`;
+    }
+
+    resultsContainer.innerHTML = html;
+    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 // Search form handler
 document.getElementById('search-form').addEventListener('submit', async (e) => {
     e.preventDefault();

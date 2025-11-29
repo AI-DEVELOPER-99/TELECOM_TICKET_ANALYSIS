@@ -167,6 +167,64 @@ This is blocking my ability to work remotely. Please help urgently.
         print(f"❌ Error: {e}")
         return False
 
+def test_generate_solution():
+    """Test the generate solution endpoint"""
+    print_section("Testing Solution Generation with LLM")
+    
+    ticket_description = """
+Subject: Email Server Not Responding
+
+Description: Our company email server has been unresponsive since this morning. 
+Users are getting timeout errors when trying to send or receive emails. 
+The server appears to be running but connections are timing out. 
+We need to restore email service as soon as possible.
+    """.strip()
+    
+    print(f"Ticket Description:\n{ticket_description}\n")
+    print("Generating solution with LLM... (this may take 10-15 seconds)\n")
+    
+    try:
+        response = requests.post(
+            f"{API_BASE_URL}/api/generate-solution",
+            json={"ticket_description": ticket_description},
+            timeout=30
+        )
+        data = response.json()
+        
+        if data.get('success'):
+            print(f"✅ Solution generated successfully!")
+            print(f"Retrieved chunks: {data['chunks_count']}")
+            print(f"LLM Model: {data['llm_model']}\n")
+            
+            print("─" * 80)
+            print("GENERATED SOLUTION:")
+            print("─" * 80 + "\n")
+            print(data['generated_solution'])
+            print()
+            
+            print("─" * 80)
+            print(f"RETRIEVED CONTEXT ({data['chunks_count']} similar tickets):")
+            print("─" * 80 + "\n")
+            
+            for i, chunk in enumerate(data['retrieved_chunks'][:3], 1):
+                similarity = int(chunk['similarity_score'] * 100)
+                print(f"{i}. {chunk['subject']}")
+                print(f"   Similarity: {similarity}% | Type: {chunk['type']}")
+                print(f"   Preview: {chunk['body'][:100]}...")
+                print()
+            
+            return True
+        else:
+            print(f"❌ Failed: {data.get('error')}")
+            return False
+            
+    except requests.exceptions.Timeout:
+        print("❌ Request timed out. The backend might be processing slowly.")
+        return False
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return False
+
 def main():
     """Run all tests"""
     print("\n" + "=" * 80)
@@ -182,7 +240,8 @@ def main():
         "Health Check": test_health_check(),
         "System Stats": test_stats(),
         "Ticket Search": test_search(),
-        "Ticket Analysis": test_analyze()
+        "Ticket Analysis": test_analyze(),
+        "Generate Solution": test_generate_solution()
     }
     
     # Summary

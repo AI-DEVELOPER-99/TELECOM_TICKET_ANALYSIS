@@ -23,6 +23,9 @@
                 <button class="tab-button active" onclick="switchTab('analyze')">
                     📝 Analyze Ticket
                 </button>
+                <button class="tab-button" onclick="switchTab('generate')">
+                    ✨ Generate Solution
+                </button>
                 <button class="tab-button" onclick="switchTab('search')">
                     🔍 Search Similar
                 </button>
@@ -58,6 +61,37 @@
                 </div>
 
                 <div id="analyze-results" class="results-container" style="display: none;">
+                    <!-- Results will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Generate Solution Tab -->
+            <div id="generate-tab" class="tab-content">
+                <div class="card">
+                    <h2>Generate Solution with LLM</h2>
+                    <p class="description">Generate a comprehensive solution using AI and retrieved similar ticket chunks</p>
+                    
+                    <form id="generate-form">
+                        <div class="form-group">
+                            <label for="generate-subject">Ticket Subject *</label>
+                            <input type="text" id="generate-subject" placeholder="e.g., Router not responding" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="generate-description">Ticket Description *</label>
+                            <textarea id="generate-description" rows="8" 
+                                placeholder="Describe the technical issue in detail..." required></textarea>
+                            <small>Minimum 10 characters. The AI will retrieve similar tickets and generate a tailored solution.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <span class="btn-text">Generate Solution</span>
+                            <span class="spinner" style="display: none;"></span>
+                        </button>
+                    </form>
+                </div>
+
+                <div id="generate-results" class="results-container" style="display: none;">
                     <!-- Results will be inserted here -->
                 </div>
             </div>
