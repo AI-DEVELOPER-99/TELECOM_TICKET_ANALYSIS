@@ -373,6 +373,42 @@ small {
     line-height: 1.6;
 }
 
+.ticket-details {
+    margin-top: 15px;
+}
+
+.detail-section {
+    margin-bottom: 15px;
+}
+
+.detail-section strong {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.ticket-body, .ticket-answer {
+    color: var(--text-color);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    padding: 10px;
+    background: var(--bg-color);
+    border-radius: 6px;
+    border-left: 3px solid var(--border-color);
+}
+
+.ticket-answer {
+    border-left-color: var(--success-color);
+    background: #f0fdf4;
+}
+
+.detail-section .badge {
+    margin-right: 5px;
+}
+
 /* Stats */
 .stats-grid {
     display: grid;

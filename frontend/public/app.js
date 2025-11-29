@@ -198,6 +198,7 @@ function displaySearchResults(results) {
 
     results.forEach((result, index) => {
         const similarity = Math.round(result.similarity_score * 100);
+        const resultId = `result-${index}`;
         
         html += `
             <div class="search-result">
@@ -206,8 +207,25 @@ function displaySearchResults(results) {
                     <span class="badge badge-similarity">Similarity: ${similarity}%</span>
                     <span class="badge badge-type">${escapeHtml(result.type)}</span>
                     <span class="badge badge-priority">${escapeHtml(result.priority)}</span>
+                    ${result.queue ? `<span class="badge">${escapeHtml(result.queue)}</span>` : ''}
                 </div>
-                <p>${escapeHtml(result.body.substring(0, 200))}...</p>
+                <div class="ticket-details">
+                    <div class="detail-section">
+                        <strong>Description:</strong>
+                        <p class="ticket-body">${escapeHtml(result.body)}</p>
+                    </div>
+                    ${result.answer ? `
+                    <div class="detail-section">
+                        <strong>Resolution:</strong>
+                        <p class="ticket-answer">${escapeHtml(result.answer)}</p>
+                    </div>
+                    ` : ''}
+                    ${result.tags && result.tags.length > 0 ? `
+                    <div class="detail-section">
+                        <strong>Tags:</strong> ${result.tags.map(tag => `<span class="badge">${escapeHtml(tag)}</span>`).join(' ')}
+                    </div>
+                    ` : ''}
+                </div>
             </div>
         `;
     });
