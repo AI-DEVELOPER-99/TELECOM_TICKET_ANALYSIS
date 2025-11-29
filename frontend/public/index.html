@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telecom Ticket Analysis Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎫 Telecom Ticket Analysis Assistant</h1>
+            <p class="subtitle">AI-Powered Support Ticket Solution Finder</p>
+            <div id="status-indicator" class="status-indicator">
+                <span class="status-dot"></span>
+                <span id="status-text">Checking connection...</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- Tab Navigation -->
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab('analyze')">
+                    📝 Analyze Ticket
+                </button>
+                <button class="tab-button" onclick="switchTab('search')">
+                    🔍 Search Similar
+                </button>
+                <button class="tab-button" onclick="switchTab('stats')">
+                    📊 Statistics
+                </button>
+            </div>
+
+            <!-- Analyze Ticket Tab -->
+            <div id="analyze-tab" class="tab-content active">
+                <div class="card">
+                    <h2>Analyze New Ticket</h2>
+                    <p class="description">Enter a ticket description to get AI-powered solution recommendations</p>
+                    
+                    <form id="analyze-form">
+                        <div class="form-group">
+                            <label for="ticket-subject">Ticket Subject *</label>
+                            <input type="text" id="ticket-subject" placeholder="e.g., Internet connection issues" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ticket-description">Ticket Description *</label>
+                            <textarea id="ticket-description" rows="8" 
+                                placeholder="Describe the issue in detail..." required></textarea>
+                            <small>Minimum 10 characters</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <span class="btn-text">Analyze Ticket</span>
+                            <span class="spinner" style="display: none;"></span>
+                        </button>
+                    </form>
+                </div>
+
+                <div id="analyze-results" class="results-container" style="display: none;">
+                    <!-- Results will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Search Similar Tab -->
+            <div id="search-tab" class="tab-content">
+                <div class="card">
+                    <h2>Search Similar Tickets</h2>
+                    <p class="description">Search for similar resolved tickets in the database</p>
+                    
+                    <form id="search-form">
+                        <div class="form-group">
+                            <label for="search-query">Search Query *</label>
+                            <input type="text" id="search-query" 
+                                placeholder="e.g., VPN connection problems" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="top-k">Number of Results</label>
+                            <input type="number" id="top-k" min="1" max="20" value="5">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <span class="btn-text">Search</span>
+                            <span class="spinner" style="display: none;"></span>
+                        </button>
+                    </form>
+                </div>
+
+                <div id="search-results" class="results-container" style="display: none;">
+                    <!-- Results will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div id="stats-tab" class="tab-content">
+                <div class="card">
+                    <h2>System Statistics</h2>
+                    <div id="stats-content">
+                        <p>Loading statistics...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by AI | OpenAI GPT & FAISS Vector Search</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

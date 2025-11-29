@@ -1,0 +1,25 @@
+{
+  "name": "telecom-ticket-assistant-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Telecom Ticket Analysis Assistant",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "cli": "node cli.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": ["telecom", "ticket", "analysis", "ai"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.2",
+    "inquirer": "^8.2.5",
+    "chalk": "^4.1.2",
+    "ora": "^5.4.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
