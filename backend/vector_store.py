@@ -1,12 +1,32 @@
 import pandas as pd
 import numpy as np
-import faiss
 import pickle
 import os
 from typing import List, Dict, Tuple
-from openai import OpenAI
-from sentence_transformers import SentenceTransformer
 from config import Config
+
+try:
+    import faiss
+    FAISS_AVAILABLE = True
+except ImportError:
+    print("Warning: FAISS not installed. Run: pip install faiss-cpu")
+    faiss = None
+    FAISS_AVAILABLE = False
+
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    print("Warning: OpenAI not installed. Run: pip install openai")
+    OpenAI = None
+    OPENAI_AVAILABLE = False
+
+try:
+    from sentence_transformers import SentenceTransformer
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SentenceTransformer = None
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
 
 class VectorStoreManager:
     """Manages embeddings and FAISS vector store for ticket data"""
@@ -22,10 +42,19 @@ class VectorStoreManager:
         self.config = Config()
         
         if self.use_openai:
+            if not OPENAI_AVAILABLE or OpenAI is None:
+                raise ImportError("OpenAI not installed. Run: pip install openai")
+            if not self.config.OPENAI_API_KEY:
+                raise ValueError("OPENAI_API_KEY not set. Using local model instead.")
             self.client = OpenAI(api_key=self.config.OPENAI_API_KEY)
             self.embedding_dimension = 1536  # text-embedding-3-small dimension
+            print(f"Using OpenAI embeddings: {self.config.EMBEDDING_MODEL}")
         else:
-            self.model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+            if not SENTENCE_TRANSFORMERS_AVAILABLE or SentenceTransformer is None:
+                raise ImportError("sentence-transformers not installed. Run: pip install sentence-transformers")
+            model_name = self.config.EMBEDDING_MODEL_NAME if hasattr(self.config, 'EMBEDDING_MODEL_NAME') else 'all-MiniLM-L6-v2'
+            print(f"Using local embeddings: {model_name}")
+            self.model = SentenceTransformer(model_name)
             self.embedding_dimension = 384
         
         self.index = None

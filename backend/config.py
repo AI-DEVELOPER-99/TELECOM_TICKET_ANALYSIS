@@ -15,9 +15,11 @@ class Config:
     AZURE_OPENAI_DEPLOYMENT_NAME = os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME', '')
     
     # Embedding Model Configuration
-    EMBEDDING_MODEL = os.getenv('EMBEDDING_MODEL', 'text-embedding-3-small')
+    EMBEDDING_MODEL = os.getenv('EMBEDDING_MODEL', 'sentence-transformers')
+    EMBEDDING_MODEL_NAME = os.getenv('EMBEDDING_MODEL_NAME', 'all-MiniLM-L6-v2')
     
     # LLM Configuration
+    LLM_MODE = os.getenv('LLM_MODE', 'local')  # 'openai' or 'local'
     LLM_MODEL = os.getenv('LLM_MODEL', 'gpt-3.5-turbo')
     TEMPERATURE = float(os.getenv('TEMPERATURE', '0.7'))
     MAX_TOKENS = int(os.getenv('MAX_TOKENS', '1000'))
@@ -32,13 +34,13 @@ class Config:
     VECTOR_STORE_PATH = os.path.join(os.path.dirname(__file__), 'vector_store')
     
     # Server Configuration
-    FLASK_PORT = int(os.getenv('FLASK_PORT', '5000'))
-    FLASK_HOST = os.getenv('FLASK_HOST', '0.0.0.0')
-    FLASK_DEBUG = os.getenv('FLASK_DEBUG', 'True') == 'True'
+    SERVER_PORT = int(os.getenv('SERVER_PORT', '5001'))
+    SERVER_HOST = os.getenv('SERVER_HOST', '0.0.0.0')
+    SERVER_DEBUG = os.getenv('SERVER_DEBUG', 'True') == 'True'
     
     @classmethod
     def validate(cls):
         """Validate required configuration"""
-        if not cls.OPENAI_API_KEY and not cls.AZURE_OPENAI_API_KEY:
-            raise ValueError("Either OPENAI_API_KEY or AZURE_OPENAI_API_KEY must be set")
+        if cls.LLM_MODE == 'openai' and not cls.OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY must be set when LLM_MODE is 'openai'")
         return True

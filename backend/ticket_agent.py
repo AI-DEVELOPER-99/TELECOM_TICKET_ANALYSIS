@@ -1,8 +1,12 @@
 import json
 from typing import List, Dict
-from openai import OpenAI
 from config import Config
 from vector_store import VectorStoreManager
+
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
 
 class TicketAnalysisAgent:
     """AI agent for analyzing tickets and suggesting solutions"""
@@ -15,8 +19,18 @@ class TicketAnalysisAgent:
             vector_store: Initialized VectorStoreManager instance
         """
         self.config = Config()
-        self.client = OpenAI(api_key=self.config.OPENAI_API_KEY)
         self.vector_store = vector_store
+        self.use_openai = self.config.LLM_MODE == 'openai'
+        
+        if self.use_openai:
+            if OpenAI is None:
+                raise ImportError("OpenAI not installed. Run: pip install openai")
+            if not self.config.OPENAI_API_KEY:
+                raise ValueError("OPENAI_API_KEY not set in .env file")
+            self.client = OpenAI(api_key=self.config.OPENAI_API_KEY)
+            print("Using OpenAI for solution generation")
+        else:
+            print("Using local rule-based solution generation")
     
     def analyze_ticket(self, ticket_description: str) -> Dict:
         """
@@ -39,8 +53,11 @@ class TicketAnalysisAgent:
         context = self._prepare_context(similar_tickets)
         
         # Step 3: Generate solutions using LLM
-        print("Generating solutions with LLM...")
-        solutions = self._generate_solutions(ticket_description, context, similar_tickets)
+        print("Generating solutions...")
+        if self.use_openai:
+            solutions = self._generate_solutions_openai(ticket_description, context, similar_tickets)
+        else:
+            solutions = self._generate_solutions_local(ticket_description, similar_tickets)
         
         return {
             'query': ticket_description,
@@ -73,9 +90,46 @@ Resolution: {ticket['answer']}
         
         return "\n".join(context_parts)
     
-    def _generate_solutions(self, query: str, context: str, similar_tickets: List[Dict]) -> List[Dict]:
+    def _generate_solutions_local(self, query: str, similar_tickets: List[Dict]) -> List[Dict]:
         """
-        Use LLM to generate and rank top 3 solutions
+        Generate solutions using local rule-based approach (no API needed)
+        
+        Args:
+            query: The new ticket description
+            similar_tickets: List of similar tickets
+            
+        Returns:
+            List of 3 solutions with suitability percentages
+        """
+        solutions = []
+        
+        # Take top 3 most similar tickets and use their solutions
+        for i, ticket in enumerate(similar_tickets[:3], 1):
+            similarity_score = ticket['similarity_score']
+            suitability = int(similarity_score * 100)
+            
+            # Extract the solution from the answer field
+            answer = ticket['answer']
+            
+            # Create reasoning based on similarity and ticket attributes
+            reasoning = f"This solution is based on a {ticket['type']} ticket with {similarity_score:.1%} similarity. "
+            reasoning += f"The original issue had {ticket['priority']} priority "
+            reasoning += f"and was resolved through the {ticket['queue']} queue. "
+            reasoning += f"The matching ticket dealt with a similar problem in the same category."
+            
+            solutions.append({
+                'rank': i,
+                'solution': answer,
+                'suitability_percentage': suitability,
+                'reasoning': reasoning,
+                'reference_tickets': [i]
+            })
+        
+        return solutions
+    
+    def _generate_solutions_openai(self, query: str, context: str, similar_tickets: List[Dict]) -> List[Dict]:
+        """
+        Use OpenAI LLM to generate and rank top 3 solutions
         
         Args:
             query: The new ticket description
